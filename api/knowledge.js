@@ -18,7 +18,7 @@ app.use((req, res, next) => {
 // A central registry mapping URL keywords to their respective Google Doc links
 const documentRegistry = {
   'hogalog': 'https://docs.google.com/document/d/1ExIzCzcivt3Gi7xrDd3W8ik3mz_fkC30oddpG7R3kPw/export?format=txt',
-  'julius-products': 'https://docs.google.com/document/d/e/2PACX-1vSqb-NVetUAtJGYl0Z4s-YcW0hBSRO2sszzXDeab06S1VbXmGPJvg5GLwcz9mnGDTTchm-b4ujMyQ3-/pub'
+  'julius-products': 'https://docs.google.com/document/d/1P_OSy_p6i6EFBmawiUl8Kxmcgqv6BJjkc0KxFQJ1OBQ/export?format=txt'
 };
 
 // 1. FOR YOU: Dynamic browser link check (e.g., /api/knowledge/hogalog)
