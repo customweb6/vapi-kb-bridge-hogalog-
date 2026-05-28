@@ -1,5 +1,10 @@
 {
   "name": "vapi-kb-bridge",
   "version": "1.0.0",
-  "type": "module"
+  "type": "module",
+  "main": "api/knowledge.js",
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {}
 }
