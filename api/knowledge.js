@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     // 1. Fetch your client's live Google Doc plain text link instantly
-    const googleDocUrl = "https://google.com";
+    const googleDocUrl = "https://docs.google.com/document/d/e/2PACX-1vQnd4oBx9WeyogFXg-naCs1oRaYTldFdf4h7HTf785_eN5i-J_7_iPspqwgu3d8O76zhyGRMe5Qn3A2/pub?format=txt";
     const response = await fetch(googleDocUrl);
     
     if (!response.ok) {
