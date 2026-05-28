@@ -2,7 +2,7 @@ import express from 'express';
 import axios from 'axios';
 
 const app = express();
-app.use(express.json()); // Essential for reading Vapi tool payload bodies
+app.use(express.json());
 
 // Handle CORS
 app.use((req, res, next) => {
@@ -15,32 +15,50 @@ app.use((req, res, next) => {
   next();
 });
 
-// 1. FOR YOU: When you visit in a web browser, see the raw text instantly
-app.get('/api/knowledge/?', async (req, res) => {
+// A central registry mapping URL keywords to their respective Google Doc links
+const documentRegistry = {
+  'hogalog': 'https://docs.google.com/document/d/1ExIzCzcivt3Gi7xrDd3W8ik3mz_fkC30oddpG7R3kPw/export?format=txt',
+  'julius-products': 'https://docs.google.com/document/d/e/2PACX-1vSqb-NVetUAtJGYl0Z4s-YcW0hBSRO2sszzXDeab06S1VbXmGPJvg5GLwcz9mnGDTTchm-b4ujMyQ3-/pub'
+};
+
+// 1. FOR YOU: Dynamic browser link check (e.g., /api/knowledge/hogalog)
+app.get('/api/knowledge/:client', async (req, res) => {
   try {
-    const googleDocUrl = "https://docs.google.com/document/d/1ExIzCzcivt3Gi7xrDd3W8ik3mz_fkC30oddpG7R3kPw/export?format=txt";
+    const clientKey = req.params.client?.toLowerCase();
+    const googleDocUrl = documentRegistry[clientKey];
+
+    if (!googleDocUrl) {
+      return res.status(404).send(`Client key "${req.params.client}" not found in registry.`);
+    }
+
     const response = await axios.get(googleDocUrl, { timeout: 4500 });
-    
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     return res.status(200).send(String(response.data));
   } catch (error) {
     console.error("Browser View Error:", error.message);
-    return res.status(500).send("Error reading knowledge base details from Google Docs.");
+    return res.status(500).send("Error reading details from the requested Google Doc.");
   }
 });
 
-// 2. FOR VAPI: This endpoint runs when the Assistant invokes the Custom Tool
-app.post('/api/knowledge/?', async (req, res) => {
+// 2. FOR VAPI: Dynamic Custom Tool route
+app.post('/api/knowledge/:client', async (req, res) => {
   try {
-    // Safely extract Vapi's unique tool execution ID
+    const clientKey = req.params.client?.toLowerCase();
+    const googleDocUrl = documentRegistry[clientKey];
     const toolCallId = req.body?.message?.toolCallList?.[0]?.id || "fallback-id";
-    console.log(`Received Vapi Tool Call Request. ID: ${toolCallId}`);
 
-    const googleDocUrl = "https://docs.google.com/document/d/1ExIzCzcivt3Gi7xrDd3W8ik3mz_fkC30oddpG7R3kPw/export?format=txt";
+    console.log(`Received Vapi Tool Call Request for [${clientKey}]. ID: ${toolCallId}`);
+
+    if (!googleDocUrl) {
+      console.error(`Unknown client key requested: ${clientKey}`);
+      return res.status(200).json({
+        results: [{ toolCallId, result: "Fehler: Unbekannter Mandant in der Konfiguration." }]
+      });
+    }
+
     const response = await axios.get(googleDocUrl, { timeout: 4500 });
     const rawKnowledgeText = String(response.data);
 
-    // Return the data formatted strictly inside Vapi's expected results schema
     return res.status(200).json({
       results: [
         {
@@ -54,18 +72,12 @@ app.post('/api/knowledge/?', async (req, res) => {
     const toolCallId = req.body?.message?.toolCallList?.[0]?.id || "fallback-id";
     
     return res.status(200).json({
-      results: [
-        {
-          toolCallId: toolCallId,
-          result: "Fehler beim Abrufen der Wissensdatenbank."
-        }
-      ]
+      results: [{ toolCallId, result: "Fehler beim Abrufen der Wissensdatenbank." }]
     });
   }
 });
 
-// Render automatically injects a PORT environment variable
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Multi-tenant knowledge base server running on port ${PORT}`);
 });
